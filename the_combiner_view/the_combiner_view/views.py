@@ -8,14 +8,26 @@ class DashboardView(View):
         self.channel_view = ChannelManagementView()
 
     def get(self, request):
+        context = {}
+        
+        # Get channels
         try:
             channels = self.channel_view.classifier_api.get_all_channels()
         except Exception:
             channels = []
         
-        context = {
-            'channels': channels
-        }
+        # Get latest tokens
+        try:
+            latest_tokens = self.channel_view.classifier_api.get_latest_tokens(limit=10)
+            print(latest_tokens)
+        except Exception:
+            latest_tokens = []
+        
+        context.update({
+            'channels': channels,
+            'latest_tokens': latest_tokens
+        })
+        
         return render(request, 'dashboard/dashboard.html', context)
 
     def post(self, request):

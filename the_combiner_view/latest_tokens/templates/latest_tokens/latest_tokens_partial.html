@@ -1,0 +1,37 @@
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-xl font-semibold mb-4">Latest Tokens</h2>
+
+    {% if latest_tokens %}
+        <div class="space-y-4">
+            {% for token in latest_tokens %}
+                <div class="border-b pb-4 last:border-b-0">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center space-x-3">
+                            <div>
+                                <h3 class="font-medium text-lg">{{ token.token }}</h3>
+                                <div class="flex space-x-2 mt-1">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if token.exchange == 'binance' %}bg-yellow-100 text-yellow-800{% else %}bg-purple-100 text-purple-800{% endif %}">
+                                        {{ token.exchange|title }}
+                                    </span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if token.market == 'spot' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                        {{ token.market|title }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">
+                                {{ token.timestamp|date:"M d, Y" }}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                {{ token.timestamp|time:"H:i" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-gray-500">No tokens found.</p>
+    {% endif %}
+</div>
