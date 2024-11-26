@@ -16,7 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from channels.views import ChannelManagementView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('channels/', ChannelManagementView.as_view(), name='channel-management'),
 ]
