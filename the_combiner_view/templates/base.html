@@ -1,7 +1,7 @@
 <!-- This file is located at: the_combiner_view/templates/base.html -->
 
 <!DOCTYPE html>
-<html lang="en" class="h-full" data-theme="light">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,19 +9,11 @@
     <!-- Include Tailwind CSS with dark mode support -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Enable dark mode based on data-theme attribute
         tailwind.config = {
-            darkMode: 'class',
+            darkMode: 'class'
         };
     </script>
     <style>
-        /* Custom styles for dark mode */
-        [data-theme="dark"] {
-            --tw-bg-opacity: 1;
-            background-color: rgba(31, 41, 55, var(--tw-bg-opacity)); /* bg-gray-800 */
-            color: rgba(255, 255, 255, 1); /* text-white */
-        }
-
         /* Custom Scrollbar Styles */
         /* For Webkit browsers (Chrome, Safari) */
         ::-webkit-scrollbar {
@@ -38,7 +30,7 @@
             border-radius: 3px;
         }
 
-        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+        html.dark ::-webkit-scrollbar-thumb {
             background: #475569;
         }
 
@@ -48,7 +40,7 @@
             scrollbar-color: #cbd5e1 transparent;
         }
 
-        [data-theme="dark"] * {
+        html.dark * {
             scrollbar-color: #475569 transparent;
         }
 
@@ -72,7 +64,7 @@
         }
     </style>
 </head>
-<body class="h-full">
+<body class="h-full bg-white dark:bg-gray-900">
     <!-- Theme Toggle Button -->
     <button onclick="toggleTheme()" class="fixed top-4 right-4 bg-gray-200 dark:bg-gray-700 p-2 rounded">
         Toggle Theme
@@ -81,26 +73,26 @@
     {% block content %}
     {% endblock %}
 
-
-
     <!-- Theme Toggle Script -->
     <script>
         function toggleTheme() {
-            const htmlElement = document.documentElement;
-            if (htmlElement.getAttribute('data-theme') === 'dark') {
-                htmlElement.setAttribute('data-theme', 'light');
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
                 localStorage.setItem('theme', 'light');
             } else {
-                htmlElement.setAttribute('data-theme', 'dark');
+                html.classList.add('dark');
                 localStorage.setItem('theme', 'dark');
             }
         }
 
         // Apply saved theme on page load
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
+        if (localStorage.getItem('theme') === 'dark' || 
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
     </script>
 </body>
 </html>
