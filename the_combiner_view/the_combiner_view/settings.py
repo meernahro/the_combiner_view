@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'channels',
     'latest_tokens',
+    'exchanges',
 ]
 
 MIDDLEWARE = [

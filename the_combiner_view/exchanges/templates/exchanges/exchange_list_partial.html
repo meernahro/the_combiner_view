@@ -1,37 +1,38 @@
-<!-- This file is located at: the_combiner_view/channels/templates/channels/channel_list_partial.html -->
-<div class="bg-white p-6 rounded-lg shadow-md">
-    <h2 class="text-xl font-semibold mb-4">Channel Management</h2>
+<!-- This file is located at: the_combiner_view/exchanges/templates/exchanges/exchange_list_partial.html -->
 
-    <!-- Add New Channel Form -->
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-xl font-semibold mb-4">Exchange Management</h2>
+
+    <!-- Add New Exchange Form -->
     <form method="POST" action="{% url 'dashboard' %}" class="space-y-4 mb-6">
         {% csrf_token %}
-        <input type="hidden" name="action" value="add">
+        <input type="hidden" name="action" value="add_exchange">
         
         <div>
-            <label class="block text-sm font-medium text-gray-700">Channel Name</label>
-            <input type="text" name="channel_name" required
+            <label class="block text-sm font-medium text-gray-700">Exchange Name</label>
+            <input type="text" name="exchange_name" required
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="Enter channel name">
+                placeholder="Enter exchange name">
         </div>
 
         <button type="submit"
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Add Channel
+            Add Exchange
         </button>
     </form>
 
-    <!-- Channel List -->
-    {% if channels %}
+    <!-- Exchange List -->
+    {% if exchanges %}
         <div class="space-y-4">
-            {% for channel in channels %}
+            {% for exchange in exchanges %}
                 <div class="flex items-center justify-between border-b pb-4">
                     <div>
-                        <h3 class="font-medium">{{ channel.name }}</h3>
+                        <h3 class="font-medium">{{ exchange.name }}</h3>
                     </div>
                     <form method="POST" action="{% url 'dashboard' %}" class="inline">
                         {% csrf_token %}
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="channel_id" value="{{ channel.id }}">
+                        <input type="hidden" name="action" value="delete_exchange">
+                        <input type="hidden" name="exchange_id" value="{{ exchange.id }}">
                         <button type="submit"
                             class="text-red-500 hover:text-red-700 font-bold text-xl">
                             ×
@@ -41,6 +42,6 @@
             {% endfor %}
         </div>
     {% else %}
-        <p class="text-gray-500">No channels followed yet.</p>
+        <p class="text-gray-500">No exchanges configured yet.</p>
     {% endif %}
 </div>
