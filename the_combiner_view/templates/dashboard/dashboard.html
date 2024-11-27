@@ -5,22 +5,22 @@
 {% block content %}
 <div class="flex h-full">
     <!-- Sidebar -->
-    <div class="flex flex-col" style="width: 15vw; min-width: 250px; max-width: 300px;">
+    <div class="flex flex-col flex-shrink-0 gap-2 p-2 bg-gray-100 dark:bg-gray-900" style="width: 15vw; min-width: 250px; max-width: 300px;">
         <!-- Latest Tokens (50% vh) -->
-        <div class="h-1/2 overflow-auto">
+        <div class="h-1/2 overflow-y-auto overflow-x-hidden hover-scroll rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             {% include 'latest_tokens/latest_tokens_partial.html' %}
         </div>
         <!-- Exchange Management (25% vh) -->
-        <div class="h-1/4 overflow-auto">
+        <div class="h-1/4 overflow-y-auto overflow-x-hidden hover-scroll rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             {% include 'exchanges/exchange_list_partial.html' %}
         </div>
         <!-- Channel Management (25% vh) -->
-        <div class="h-1/4 overflow-auto">
+        <div class="h-1/4 overflow-y-auto overflow-x-hidden hover-scroll rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             {% include 'channels/channel_list_partial.html' %}
         </div>
     </div>
     <!-- Main Content Area -->
-    <div class="flex-grow">
+    <div class="flex-grow p-2">
         <!-- Placeholder for future trading section -->
         <div class="h-full flex items-center justify-center">
             <p class="text-gray-500">Trading section coming soon...</p>

@@ -21,6 +21,55 @@
             background-color: rgba(31, 41, 55, var(--tw-bg-opacity)); /* bg-gray-800 */
             color: rgba(255, 255, 255, 1); /* text-white */
         }
+
+        /* Custom Scrollbar Styles */
+        /* For Webkit browsers (Chrome, Safari) */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        /* For Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        [data-theme="dark"] * {
+            scrollbar-color: #475569 transparent;
+        }
+
+        /* Hide scrollbar when not hovering (optional) */
+        .hover-scroll {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .hover-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hover-scroll:hover {
+            scrollbar-width: thin;
+            -ms-overflow-style: auto;
+        }
+
+        .hover-scroll:hover::-webkit-scrollbar {
+            display: block;
+        }
     </style>
 </head>
 <body class="h-full">
