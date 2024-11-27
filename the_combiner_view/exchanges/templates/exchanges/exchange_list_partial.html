@@ -1,33 +1,31 @@
 <!-- This file is located at: the_combiner_view/exchanges/templates/exchanges/exchange_list_partial.html -->
 
-<div class="bg-white dark:bg-gray-800 p-4 h-full">
-    <h2 class="text-xl font-semibold mb-4 truncate text-gray-800 dark:text-gray-100">Exchange Management</h2>
+<div class="bg-white dark:bg-gray-800 p-3 h-full">
+    <h2 class="text-base font-semibold mb-2 truncate text-gray-800 dark:text-gray-100">Exchange Management</h2>
 
-    <!-- Add New Exchange Form -->
-    <form method="POST" action="{% url 'dashboard' %}" class="flex mb-4 gap-2">
+    <form method="POST" action="{% url 'dashboard' %}" class="flex mb-2 gap-1.5">
         {% csrf_token %}
         <input type="hidden" name="action" value="add_exchange">
         <input type="text" name="exchange_name" required
-            class="flex-1 min-w-0 rounded border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+            class="flex-1 min-w-0 rounded text-sm border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-1.5 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
             placeholder="Enter exchange name">
         <button type="submit"
-            class="flex-shrink-0 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-bold p-2 rounded">
+            class="flex-shrink-0 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm font-medium p-1.5 rounded">
             Add
         </button>
     </form>
 
-    <!-- Exchange List -->
     {% if exchanges %}
-        <ul class="space-y-2">
+        <ul class="space-y-1">
             {% for exchange in exchanges %}
-                <li class="flex items-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                <li class="flex items-center p-1.5 bg-gray-50 dark:bg-gray-700 rounded text-sm">
                     <span class="flex-1 min-w-0 truncate text-gray-900 dark:text-gray-100">{{ exchange.name }}</span>
                     <form method="POST" action="{% url 'dashboard' %}" class="flex-shrink-0">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="delete_exchange">
                         <input type="hidden" name="exchange_id" value="{{ exchange.id }}">
                         <button type="submit"
-                            class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-bold ml-2">
+                            class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium ml-2">
                             Remove
                         </button>
                     </form>
@@ -35,6 +33,6 @@
             {% endfor %}
         </ul>
     {% else %}
-        <p class="text-gray-500 dark:text-gray-400">No exchanges configured yet.</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">No exchanges configured yet.</p>
     {% endif %}
 </div>
