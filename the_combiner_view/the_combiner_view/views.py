@@ -19,7 +19,7 @@ class DashboardView(View):
         # Get latest tokens
         try:
             latest_tokens = self.channel_view.classifier_api.get_latest_tokens(limit=10)
-            print(latest_tokens)
+            
         except Exception:
             latest_tokens = []
         
