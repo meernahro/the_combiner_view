@@ -1,46 +1,39 @@
 <!-- This file is located at: the_combiner_view/exchanges/templates/exchanges/exchange_list_partial.html -->
 
-<div class="bg-white p-6 rounded-lg shadow-md">
+<div class="bg-white dark:bg-gray-800 p-4 h-full">
     <h2 class="text-xl font-semibold mb-4">Exchange Management</h2>
 
     <!-- Add New Exchange Form -->
-    <form method="POST" action="{% url 'dashboard' %}" class="space-y-4 mb-6">
+    <form method="POST" action="{% url 'dashboard' %}" class="flex mb-4 space-x-2">
         {% csrf_token %}
         <input type="hidden" name="action" value="add_exchange">
-        
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Exchange Name</label>
-            <input type="text" name="exchange_name" required
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="Enter exchange name">
-        </div>
-
+        <input type="text" name="exchange_name" required
+            class="flex-grow rounded border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 p-2"
+            placeholder="Enter exchange name">
         <button type="submit"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Add Exchange
+            class="bg-blue-500 hover:bg-blue-600 text-white font-bold p-2 rounded">
+            Add
         </button>
     </form>
 
     <!-- Exchange List -->
     {% if exchanges %}
-        <div class="space-y-4">
+        <ul class="space-y-2">
             {% for exchange in exchanges %}
-                <div class="flex items-center justify-between border-b pb-4">
-                    <div>
-                        <h3 class="font-medium">{{ exchange.name }}</h3>
-                    </div>
-                    <form method="POST" action="{% url 'dashboard' %}" class="inline">
+                <li class="flex justify-between items-center p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                    <span>{{ exchange.name }}</span>
+                    <form method="POST" action="{% url 'dashboard' %}">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="delete_exchange">
                         <input type="hidden" name="exchange_id" value="{{ exchange.id }}">
                         <button type="submit"
-                            class="text-red-500 hover:text-red-700 font-bold text-xl">
-                            ×
+                            class="text-red-500 hover:text-red-700 font-bold">
+                            Remove
                         </button>
                     </form>
-                </div>
+                </li>
             {% endfor %}
-        </div>
+        </ul>
     {% else %}
         <p class="text-gray-500">No exchanges configured yet.</p>
     {% endif %}

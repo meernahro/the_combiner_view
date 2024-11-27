@@ -3,23 +3,27 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8">Dashboard</h1>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <!-- Channel Management Section -->
-        <div class="col-span-1">
-            {% include 'channels/channel_list_partial.html' %}
+<div class="flex h-full">
+    <!-- Sidebar -->
+    <div class="flex flex-col" style="width: 15vw; min-width: 250px; max-width: 300px;">
+        <!-- Latest Tokens (50% vh) -->
+        <div class="h-1/2 overflow-auto">
+            {% include 'latest_tokens/latest_tokens_partial.html' %}
         </div>
-
-        <!-- Exchange Management Section -->
-        <div class="col-span-1">
+        <!-- Exchange Management (25% vh) -->
+        <div class="h-1/4 overflow-auto">
             {% include 'exchanges/exchange_list_partial.html' %}
         </div>
-
-        <!-- Latest Tokens Section -->
-        <div class="col-span-1">
-            {% include 'latest_tokens/latest_tokens_partial.html' %}
+        <!-- Channel Management (25% vh) -->
+        <div class="h-1/4 overflow-auto">
+            {% include 'channels/channel_list_partial.html' %}
+        </div>
+    </div>
+    <!-- Main Content Area -->
+    <div class="flex-grow">
+        <!-- Placeholder for future trading section -->
+        <div class="h-full flex items-center justify-center">
+            <p class="text-gray-500">Trading section coming soon...</p>
         </div>
     </div>
 </div>
