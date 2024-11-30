@@ -3,6 +3,11 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from channels.views import ChannelManagementView
 from exchanges.views import ExchangeManagementView
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from django.template.context_processors import csrf
+from django.template.context import RequestContext
 
 class DashboardView(View):
     def __init__(self):
@@ -40,41 +45,76 @@ class DashboardView(View):
 
     def post(self, request):
         action = request.POST.get('action')
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         
-        if action == 'add':
-            channel_data = {
-                'name': request.POST.get('channel_name'),
-            }
-            try:
+        try:
+            if action == 'add':
+                channel_data = {
+                    'name': request.POST.get('channel_name'),
+                }
                 self.channel_view.classifier_api.add_channel(channel_data)
+                if is_ajax:
+                    return JsonResponse({'success': True})
                 messages.success(request, "Channel added successfully!")
-            except Exception as e:
-                messages.error(request, f"Error adding channel: {str(e)}")
 
-        elif action == 'delete':
-            channel_id = request.POST.get('channel_id')
-            try:
+            elif action == 'delete':
+                channel_id = request.POST.get('channel_id')
                 self.channel_view.classifier_api.delete_channel(int(channel_id))
-                messages.success(request, "Channel unfollowed successfully!")
-            except Exception as e:
-                messages.error(request, f"Error unfollowing channel: {str(e)}")
+                if is_ajax:
+                    return JsonResponse({'success': True})
+                messages.success(request, "Channel deleted successfully!")
 
-        elif action == 'add_exchange':
-            exchange_data = {
-                'name': request.POST.get('exchange_name'),
-            }
-            try:
+            elif action == 'add_exchange':
+                exchange_data = {
+                    'name': request.POST.get('exchange_name'),
+                }
                 self.exchange_view.classifier_api.add_exchange(exchange_data)
+                if is_ajax:
+                    return JsonResponse({'success': True})
                 messages.success(request, "Exchange added successfully!")
-            except Exception as e:
-                messages.error(request, f"Error adding exchange: {str(e)}")
 
-        elif action == 'delete_exchange':
-            exchange_id = request.POST.get('exchange_id')
-            try:
+            elif action == 'delete_exchange':
+                exchange_id = request.POST.get('exchange_id')
                 self.exchange_view.classifier_api.delete_exchange(int(exchange_id))
+                if is_ajax:
+                    return JsonResponse({'success': True})
                 messages.success(request, "Exchange deleted successfully!")
-            except Exception as e:
-                messages.error(request, f"Error deleting exchange: {str(e)}")
 
+        except Exception as e:
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': str(e)})
+            messages.error(request, f"Error: {str(e)}")
+
+        if is_ajax:
+            return JsonResponse({'success': False})
         return redirect('dashboard')
+
+def get_exchanges(request):
+    exchange_view = ExchangeManagementView()
+    try:
+        exchanges = exchange_view.classifier_api.get_all_exchanges()
+    except Exception:
+        exchanges = []
+    
+    context = {'exchanges': exchanges}
+    context.update(csrf(request))
+    
+    html = render_to_string('exchanges/exchange_list_content.html', 
+                          context,
+                          request=request)
+    return HttpResponse(html)
+
+def get_channels(request):
+    channel_view = ChannelManagementView()
+    try:
+        channels = channel_view.classifier_api.get_all_channels()
+    except Exception:
+        channels = []
+    
+    context = {'channels': channels}
+    context.update(csrf(request))
+    
+    html = render_to_string('channels/channel_list_content.html', 
+                          context,
+                          request=request)
+    return HttpResponse(html)
