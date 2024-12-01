@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'channel_management',
     'latest_tokens',
     'exchanges',
+    'trading',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -126,3 +128,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Add Channels configuration
+ASGI_APPLICATION = 'the_combiner_view.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
