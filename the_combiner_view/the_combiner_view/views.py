@@ -1,7 +1,7 @@
 from django.views import View
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from channels.views import ChannelManagementView
+from channel_management.views import ChannelManagementView
 from exchanges.views import ExchangeManagementView
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -114,7 +114,7 @@ def get_channels(request):
     context = {'channels': channels}
     context.update(csrf(request))
     
-    html = render_to_string('channels/channel_list_content.html', 
+    html = render_to_string('channel_management/channel_list_content.html', 
                           context,
                           request=request)
     return HttpResponse(html)

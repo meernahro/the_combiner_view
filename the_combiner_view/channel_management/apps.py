@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class ChannelsConfig(AppConfig):
+class ChannelManagementConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'channels'
+    name = 'channel_management'
