@@ -1,6 +1,9 @@
 <div class="h-full bg-white dark:bg-gray-800 p-4 rounded-lg">
     <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Trading Dashboard</h2>
-    <div id="trading-status" class="text-sm text-gray-600 dark:text-gray-400"></div>
+    <div id="trading-status" class="flex items-center gap-2 text-sm">
+        <span class="status-dot w-2 h-2 rounded-full"></span>
+        <span class="status-text"></span>
+    </div>
 </div>
 
 <script>
@@ -16,7 +19,18 @@
             if (data.type === 'connection_status') {
                 console.log('External server connection status:', data.is_external_connected);
                 const statusElement = document.getElementById('trading-status');
-                statusElement.textContent = `External server: ${data.is_external_connected ? 'Connected' : 'Disconnected'}`;
+                const statusDot = statusElement.querySelector('.status-dot');
+                const statusText = statusElement.querySelector('.status-text');
+                
+                statusText.textContent = data.is_external_connected ? 'Connected' : 'Disconnected';
+                
+                if (data.is_external_connected) {
+                    statusDot.className = 'status-dot w-2 h-2 rounded-full bg-green-500 dark:bg-green-400';
+                    statusText.className = 'status-text text-green-600 dark:text-green-400';
+                } else {
+                    statusDot.className = 'status-dot w-2 h-2 rounded-full bg-red-500 dark:bg-red-400';
+                    statusText.className = 'status-text text-red-600 dark:text-red-400';
+                }
             }
         };
 
