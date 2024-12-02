@@ -1,17 +1,28 @@
-<div class="h-full bg-white dark:bg-gray-800 p-4 rounded-lg">
-    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Trading Dashboard</h2>
-    
+<div class="h-full bg-white dark:bg-gray-800 p-4 rounded-lg flex flex-col">
     <div class="mb-4">
-        <a href="{% url 'trading:accounts' %}" 
-           class="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-            View Trading Accounts
-        </a>
+        <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Trading Dashboard</h2>
+        <div id="trading-status" class="flex items-center gap-2 text-sm">
+            <span class="status-dot w-2 h-2 rounded-full"></span>
+            <span class="status-text"></span>
+        </div>
     </div>
 
-    <div id="trading-status" class="flex items-center gap-2 text-sm">
-        <span class="status-dot w-2 h-2 rounded-full"></span>
-        <span class="status-text"></span>
+    <!-- Flexible space -->
+    <div class="flex-grow">
+        <!-- Other trading dashboard content goes here -->
     </div>
+
+    <!-- Trading Accounts Section -->
+    <div class="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+        <h3 class="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
+            <span class="font-bold text-gray-900 dark:text-gray-100">{{ request.user.username|title }}</span>'s Trading Accounts
+        </h3>
+        <div id="accounts-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <!-- Accounts will be loaded here -->
+            <div class="loading-indicator text-sm text-gray-500 dark:text-gray-400">Loading accounts...</div>
+        </div>
+    </div>
+
     <div id="token-toasts" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 </div>
 
@@ -20,7 +31,78 @@
     let mouseMovedTimeout = null;
     let toastTimeouts = new Map();
 
-    // Track mouse movement
+    // Trading accounts handling
+    const loadTradingAccounts = async () => {
+        try {
+            const response = await fetch('/trading/accounts/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                renderAccounts(data.accounts);
+            } else {
+                console.error('Failed to load accounts:', data.error);
+            }
+        } catch (error) {
+            console.error('Error loading accounts:', error);
+        }
+    };
+
+    const renderAccounts = (accounts) => {
+        const container = document.getElementById('accounts-container');
+        
+        if (!accounts || !accounts.length) {
+            container.innerHTML = `
+                <div class="col-span-full text-sm text-gray-500 dark:text-gray-400 text-center py-2">
+                    No trading accounts configured
+                </div>
+            `;
+            return;
+        }
+
+        const accountsHtml = accounts.map(account => `
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="font-medium text-gray-900 dark:text-gray-100">${account.name}</span>
+                    <button 
+                        onclick="event.preventDefault(); toggleAccountStatus(${account.id}, '${account.status}', this)"
+                        class="px-1.5 py-0.5 text-xs rounded-full cursor-pointer transition-colors ${
+                            account.status === 'active'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 hover:bg-green-200 dark:hover:bg-green-800'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 hover:bg-red-200 dark:hover:bg-red-800'
+                        }">
+                        ${account.status}
+                    </button>
+                </div>
+                <div class="space-y-1 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 dark:text-gray-400">Exchange:</span>
+                        <span class="text-gray-900 dark:text-gray-100">${account.exchange.toUpperCase()}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 dark:text-gray-400">Market:</span>
+                        <span class="text-gray-900 dark:text-gray-100">${account.market_type.toUpperCase()}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 dark:text-gray-400">Environment:</span>
+                        <span class="text-gray-900 dark:text-gray-100">${account.is_testnet ? 'Testnet' : 'Mainnet'}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = accountsHtml;
+    };
+
+    // Initialize everything when the document loads
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTradingAccounts();
+    });
+
+    // Existing mouse movement handling
     document.addEventListener('mousemove', () => {
         if (mouseMovedTimeout) {
             clearTimeout(mouseMovedTimeout);
@@ -154,4 +236,90 @@
     }
 
     connectWebSocket();
+
+    // Add these new functions to handle status toggling
+    async function toggleAccountStatus(accountId, currentStatus, buttonElement) {
+        try {
+            const newStatus = currentStatus === 'active' ? false : true;
+            console.log(`Toggling account ${accountId} to ${newStatus ? 'active' : 'inactive'}`);
+            
+            const response = await fetch(`/trading/accounts/${accountId}/verify/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    verified: newStatus
+                })
+            });
+
+            const data = await response.json();
+            console.log('Toggle response:', data);
+
+            if (data.success) {
+                // Update the status immediately in the UI using the passed button element
+                const newStatusText = data.status;
+                
+                // Update button text
+                buttonElement.textContent = newStatusText;
+                
+                // Update button classes based on the actual status
+                buttonElement.className = `px-1.5 py-0.5 text-xs rounded-full cursor-pointer transition-colors ${
+                    newStatusText === 'active'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 hover:bg-green-200 dark:hover:bg-green-800'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 hover:bg-red-200 dark:hover:bg-red-800'
+                }`;
+
+                showToast(`Account status updated to ${newStatusText}`, 'success');
+                
+                // Reload accounts after a short delay
+                setTimeout(loadTradingAccounts, 1000);
+            } else {
+                console.error('Failed to update account status:', data.error);
+                showToast(data.error || 'Failed to update account status', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating account status:', error);
+            showToast('Error updating account status', 'error');
+        }
+    }
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Update the showToast function to handle success/error states better
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('token-toasts');
+        const toast = document.createElement('div');
+        
+        // Add different styles for success/error
+        const baseClasses = 'token-toast p-4 rounded-lg shadow-lg transition-opacity duration-300 mb-2';
+        const typeClasses = type === 'error' 
+            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' 
+            : type === 'success'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+                : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
+        
+        toast.className = `${baseClasses} ${typeClasses}`;
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+
+        // Remove toast after 3 seconds
+        setTimeout(() => fadeOutAndRemoveToast(toast), 3000);
+    }
 </script> 

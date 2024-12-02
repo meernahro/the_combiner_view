@@ -6,6 +6,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from the_combiner_view.api_utils import TradeExternalApis
 import requests
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 
 logger = logging.getLogger(__name__)
 
@@ -55,3 +57,43 @@ class TradingAccountsView(LoginRequiredMixin, View):
             })
             
         return render(request, 'trading/accounts.html', context)
+
+@login_required
+@require_http_methods(["POST"])
+def verify_account(request, account_id):
+    try:
+        data = json.loads(request.body)
+        verified = data.get('verified', False)
+        
+        logger.info(f"Verifying account {account_id} with status {verified}")
+        
+        trade_api = TradeExternalApis()
+        response = trade_api.verify_trading_account(account_id, verified)
+        
+        logger.info(f"API Response: {response}")
+        
+        if response.get('status') in ['active', 'inactive', 'failed_verification']:
+            return JsonResponse({
+                'success': True,
+                'account': response,
+                'status': response['status']
+            })
+        else:
+            logger.warning(f"Unexpected response format: {response}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Unexpected response from trading service'
+            }, status=400)
+            
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in request: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request format'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Error verifying account {account_id}: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
