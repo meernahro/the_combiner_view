@@ -4,10 +4,79 @@
         <span class="status-dot w-2 h-2 rounded-full"></span>
         <span class="status-text"></span>
     </div>
+    <div id="token-toasts" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 </div>
 
 <script>
     let tradingSocket = null;
+    let mouseMovedTimeout = null;
+    let toastTimeouts = new Map();
+
+    // Track mouse movement
+    document.addEventListener('mousemove', () => {
+        if (mouseMovedTimeout) {
+            clearTimeout(mouseMovedTimeout);
+        }
+        mouseMovedTimeout = setTimeout(() => {
+            clearAllToasts();
+        }, 5000);
+    });
+
+    function clearAllToasts() {
+        const toasts = document.querySelectorAll('.token-toast');
+        toasts.forEach(toast => {
+            fadeOutAndRemoveToast(toast);
+        });
+    }
+
+    function fadeOutAndRemoveToast(toast) {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }
+
+    function createTokenToast(token) {
+        const toast = document.createElement('div');
+        toast.className = `token-toast p-3 rounded-lg shadow-lg border transition-opacity duration-300 flex items-center justify-between gap-2`;
+        
+        // Set background and border colors based on exchange
+        let exchangeColors;
+        switch (token.exchange.toLowerCase()) {
+            case 'binance':
+                exchangeColors = 'bg-yellow-100 dark:bg-yellow-900 border-yellow-400';
+                break;
+            case 'bybit':
+                exchangeColors = 'bg-purple-100 dark:bg-purple-900 border-purple-400';
+                break;
+            case 'kucoin':
+                exchangeColors = 'bg-emerald-100 dark:bg-emerald-900 border-emerald-400';
+                break;
+            default:
+                exchangeColors = 'bg-gray-100 dark:bg-gray-900 border-gray-400';
+        }
+        
+        toast.className += ` ${exchangeColors}`;
+
+        const content = `
+            <div>
+                <h3 class="font-medium text-gray-900 dark:text-gray-100">${token.token}</h3>
+                <div class="flex gap-1.5 mt-1">
+                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-opacity-50 ${exchangeColors}">
+                        ${token.exchange}
+                    </span>
+                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                        token.market === 'spot' 
+                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100' 
+                            : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100'
+                    }">
+                        ${token.market}
+                    </span>
+                </div>
+            </div>
+        `;
+
+        toast.innerHTML = content;
+        return toast;
+    }
 
     function connectWebSocket() {
         tradingSocket = new WebSocket(
@@ -15,11 +84,9 @@
         );
 
         tradingSocket.onmessage = function(e) {
-            console.log('Received WebSocket message:', e.data);
-            
             const data = JSON.parse(e.data);
+            
             if (data.type === 'connection_status') {
-                console.log('External server connection status:', data.is_external_connected);
                 const statusElement = document.getElementById('trading-status');
                 const statusDot = statusElement.querySelector('.status-dot');
                 const statusText = statusElement.querySelector('.status-text');
@@ -33,6 +100,13 @@
                     statusDot.className = 'status-dot w-2 h-2 rounded-full bg-red-500 dark:bg-red-400';
                     statusText.className = 'status-text text-red-600 dark:text-red-400';
                 }
+            } else if (data.type === 'tokens') {
+                const toastContainer = document.getElementById('token-toasts');
+                
+                data.data.forEach(token => {
+                    const toast = createTokenToast(token);
+                    toastContainer.appendChild(toast);
+                });
             }
         };
 
