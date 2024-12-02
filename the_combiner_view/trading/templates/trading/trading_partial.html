@@ -36,40 +36,50 @@
 
     function createTokenToast(token) {
         const toast = document.createElement('div');
-        toast.className = `token-toast p-3 rounded-lg shadow-lg border transition-opacity duration-300 flex items-center justify-between gap-2`;
+        toast.className = `token-toast p-3 rounded-lg shadow-lg border transition-opacity duration-300`;
         
         // Set background and border colors based on exchange
         let exchangeColors;
         switch (token.exchange.toLowerCase()) {
             case 'binance':
-                exchangeColors = 'bg-yellow-100 dark:bg-yellow-900 border-yellow-400';
+                exchangeColors = 'bg-yellow-100 dark:bg-yellow-900 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-100';
                 break;
             case 'bybit':
-                exchangeColors = 'bg-purple-100 dark:bg-purple-900 border-purple-400';
+                exchangeColors = 'bg-purple-100 dark:bg-purple-900 border-purple-300 dark:border-purple-700 text-purple-800 dark:text-purple-100';
                 break;
             case 'kucoin':
-                exchangeColors = 'bg-emerald-100 dark:bg-emerald-900 border-emerald-400';
+                exchangeColors = 'bg-emerald-100 dark:bg-emerald-900 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-100';
                 break;
             default:
-                exchangeColors = 'bg-gray-100 dark:bg-gray-900 border-gray-400';
+                exchangeColors = 'bg-gray-100 dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100';
         }
         
         toast.className += ` ${exchangeColors}`;
 
         const content = `
-            <div>
-                <h3 class="font-medium text-gray-900 dark:text-gray-100">${token.token}</h3>
-                <div class="flex gap-1.5 mt-1">
-                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-opacity-50 ${exchangeColors}">
-                        ${token.exchange}
-                    </span>
-                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                        token.market === 'spot' 
-                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100' 
-                            : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100'
-                    }">
-                        ${token.market}
-                    </span>
+            <div class="flex justify-between items-center gap-3">
+                <div>
+                    <h3 class="font-medium">${token.token}</h3>
+                    <div class="flex gap-1.5 mt-1">
+                        <span class="px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                            token.exchange.toLowerCase() === 'binance' ? 'bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100' :
+                            token.exchange.toLowerCase() === 'bybit' ? 'bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-100' :
+                            token.exchange.toLowerCase() === 'kucoin' ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-100' :
+                            'bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-100'
+                        }">
+                            ${token.exchange}
+                        </span>
+                        <span class="px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                            token.market === 'spot' 
+                                ? 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-100' 
+                                : 'bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-100'
+                        }">
+                            ${token.market}
+                        </span>
+                    </div>
+                </div>
+                <div class="text-right text-xs opacity-75">
+                    ${new Date().toLocaleTimeString()}
                 </div>
             </div>
         `;
@@ -102,7 +112,6 @@
                 }
             } else if (data.type === 'tokens') {
                 const toastContainer = document.getElementById('token-toasts');
-                
                 data.data.forEach(token => {
                     const toast = createTokenToast(token);
                     toastContainer.appendChild(toast);
