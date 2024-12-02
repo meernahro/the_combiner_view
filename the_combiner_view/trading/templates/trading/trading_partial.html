@@ -1,5 +1,13 @@
 <div class="h-full bg-white dark:bg-gray-800 p-4 rounded-lg">
     <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Trading Dashboard</h2>
+    
+    <div class="mb-4">
+        <a href="{% url 'trading:accounts' %}" 
+           class="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+            View Trading Accounts
+        </a>
+    </div>
+
     <div id="trading-status" class="flex items-center gap-2 text-sm">
         <span class="status-dot w-2 h-2 rounded-full"></span>
         <span class="status-text"></span>

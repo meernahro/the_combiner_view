@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-4">
+    <h1 class="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Trading Accounts</h1>
+    
+    {% if error %}
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <div id="accounts-container">
+        <!-- Loading state -->
+        <div class="loading-indicator">Loading accounts...</div>
+    </div>
+</div>
+
+<script>
+    const logInfo = (msg) => {
+        console.log(`[Trading Accounts] ${msg}`);
+    };
+
+    const logError = (msg, error) => {
+        console.error(`[Trading Accounts] ${msg}`, error);
+    };
+
+    const renderAccounts = (accounts) => {
+        logInfo(`Rendering ${accounts.length} accounts`);
+        console.log('Raw accounts data:', accounts);
+        
+        const container = document.getElementById('accounts-container');
+        
+        if (!accounts || !accounts.length) {
+            logInfo('No accounts found');
+            container.innerHTML = `
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 text-center">
+                    <p class="text-gray-500 dark:text-gray-400">No trading accounts found.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const accountsHtml = accounts.map(account => {
+            logInfo(`Processing account: ${JSON.stringify(account)}`);
+            return `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 mb-4">
+                    <div class="flex justify-between items-start">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">${account.name}</h2>
+                        <span class="px-2 py-1 text-xs rounded-full ${
+                            account.status === 'active' 
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
+                        }">
+                            ${account.status}
+                        </span>
+                    </div>
+                    <div class="mt-2 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Exchange:</span>
+                            <span>${account.exchange.toUpperCase()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Market Type:</span>
+                            <span>${account.market_type.toUpperCase()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Environment:</span>
+                            <span>${account.is_testnet ? 'Testnet' : 'Mainnet'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Last Verified:</span>
+                            <span>${new Date(account.last_verified).toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = accountsHtml;
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        logInfo('Initializing trading accounts view');
+        try {
+            // Use the pre-serialized JSON from the context
+            const accountsData = {{ trading_accounts_json|safe }};
+            logInfo(`Received ${accountsData.length} accounts from server`);
+            renderAccounts(accountsData);
+        } catch (error) {
+            logError('Failed to initialize accounts view', error);
+            document.getElementById('accounts-container').innerHTML = `
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                    Failed to load trading accounts. Please try again later.
+                </div>
+            `;
+        }
+    });
+</script>
+{% endblock %}

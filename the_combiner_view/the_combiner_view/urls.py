@@ -15,7 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import DashboardView, get_exchanges, get_channels
 from latest_tokens.urls import urlpatterns as latest_tokens_urls
 
@@ -25,6 +27,11 @@ urlpatterns = [
     path('get-exchanges/', get_exchanges, name='get_exchanges'),
     path('get-channels/', get_channels, name='get_channels'),
     path('admin/', admin.site.urls),
+    path('trading/', include('trading.urls', namespace='trading')),
 ]
 
 urlpatterns += latest_tokens_urls
+
+# Add this for serving static files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

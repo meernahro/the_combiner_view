@@ -34,8 +34,12 @@ class TradeExternalApis:
     """
     Utility class to interact with external trading APIs.
     """
-    TRADE_BASE_URL = "http://127.0.0.1:8082"
-
+    def __init__(self):
+        self.TRADE_BASE_URL = "http://localhost:8082"
+        self.headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
 
     # Users
     def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
