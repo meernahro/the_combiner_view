@@ -67,15 +67,18 @@
             <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm">
                 <div class="flex justify-between items-start mb-2">
                     <span class="font-medium text-gray-900 dark:text-gray-100">${account.name}</span>
-                    <button 
-                        onclick="event.preventDefault(); toggleAccountStatus(${account.id}, '${account.status}', this)"
-                        class="px-1.5 py-0.5 text-xs rounded-full cursor-pointer transition-colors ${
-                            account.status === 'active'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 hover:bg-green-200 dark:hover:bg-green-800'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 hover:bg-red-200 dark:hover:bg-red-800'
-                        }">
-                        ${account.status === 'failed_verification' ? 'disabled' : account.status}
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500 balance-${account.id}">Loading...</span>
+                        <button 
+                            onclick="event.preventDefault(); toggleAccountStatus(${account.id}, '${account.status}', this)"
+                            class="px-1.5 py-0.5 text-xs rounded-full cursor-pointer transition-colors ${
+                                account.status === 'active'
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 hover:bg-green-200 dark:hover:bg-green-800'
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 hover:bg-red-200 dark:hover:bg-red-800'
+                            }">
+                            ${account.status === 'failed_verification' ? 'disabled' : account.status}
+                        </button>
+                    </div>
                 </div>
                 <div class="space-y-1 text-xs">
                     <div class="flex justify-between">
@@ -95,7 +98,42 @@
         `).join('');
 
         container.innerHTML = accountsHtml;
+        
+        // After rendering, fetch balances for all accounts
+        accounts.forEach(account => {
+            fetchAccountBalance(account);
+        });
     };
+
+    // Update the fetchAccountBalance function to pass account info
+    async function fetchAccountBalance(account) {
+        if (account.exchange !== 'mexc' || account.market_type !== 'spot') {
+            document.querySelector(`.balance-${account.id}`).textContent = 'N/A';
+            return;
+        }
+
+        try {
+            console.log(`Fetching balance for account: ${account.name}`);
+            const response = await fetch(`/trading/accounts/${account.id}/balance/`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+            console.log('Balance API response:', data);
+            
+            const balanceElement = document.querySelector(`.balance-${account.id}`);
+            if (data.success) {
+                balanceElement.textContent = `${data.balance} USDT`;
+            } else {
+                console.log('Balance error:', data.error);
+                balanceElement.textContent = 'N/A';
+            }
+        } catch (error) {
+            console.error('Error fetching balance:', error);
+            document.querySelector(`.balance-${account.id}`).textContent = 'Error';
+        }
+    }
 
     // Initialize everything when the document loads
     document.addEventListener('DOMContentLoaded', () => {

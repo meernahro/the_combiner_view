@@ -97,3 +97,33 @@ def verify_account(request, account_id):
             'success': False,
             'error': str(e)
         }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_account_balance(request, account_id):
+    try:
+        trade_api = TradeExternalApis()
+        balance_data = trade_api.get_mexc_balance(account_id, 'USDT')
+        logger.info(f"MEXC balance response for account {account_id}: {balance_data}")
+        
+        if 'total' in balance_data:
+            balance = round(float(balance_data['total']), 2)
+            logger.info(f"Formatted USDT balance: {balance}")
+            return JsonResponse({
+                'success': True,
+                'balance': balance
+            })
+        
+        logger.warning(f"No balance data found in response: {balance_data}")
+        return JsonResponse({
+            'success': False,
+            'error': 'No balance data found',
+            'raw_response': balance_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching balance for account {account_id}: {str(e)}", exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
