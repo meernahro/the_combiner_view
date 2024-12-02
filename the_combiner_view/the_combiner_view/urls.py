@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from .views import DashboardView, get_exchanges, get_channels
+from latest_tokens.urls import urlpatterns as latest_tokens_urls
+
 
 urlpatterns = [
     path('', DashboardView.as_view(), name='dashboard'),
@@ -24,3 +26,5 @@ urlpatterns = [
     path('get-channels/', get_channels, name='get_channels'),
     path('admin/', admin.site.urls),
 ]
+
+urlpatterns += latest_tokens_urls

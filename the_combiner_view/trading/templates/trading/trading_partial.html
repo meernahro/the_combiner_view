@@ -88,6 +88,21 @@
         return toast;
     }
 
+    async function refreshLatestTokens() {
+        try {
+            const response = await fetch('/get_latest_tokens/');
+            const html = await response.text();
+            const latestTokensContainer = document.getElementById('latest-tokens-list');
+            if (latestTokensContainer) {
+                latestTokensContainer.innerHTML = html;
+            } else {
+                console.error('Latest tokens container not found');
+            }
+        } catch (error) {
+            console.error('Error refreshing latest tokens:', error);
+        }
+    }
+
     function connectWebSocket() {
         tradingSocket = new WebSocket(
             'ws://' + window.location.host + '/ws/trading/'
@@ -116,6 +131,7 @@
                     const toast = createTokenToast(token);
                     toastContainer.appendChild(toast);
                 });
+                refreshLatestTokens();
             }
         };
 
