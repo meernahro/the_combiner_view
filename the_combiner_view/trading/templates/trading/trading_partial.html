@@ -13,15 +13,60 @@
         <div class="mb-6">
             <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">Automation Rules</h3>
             
-            <!-- Add Rule Button -->
-            <button id="add-rule-btn" class="mb-4 inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Add Rule
-            </button>
+            <!-- New Rule Creation Interface -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4 flex items-center gap-3">
+                <span class="text-gray-700 dark:text-gray-300">IF LISTING ON</span>
+                
+                <!-- Exchanges Multi-select -->
+                <div class="relative inline-block min-w-[200px]">
+                    <select multiple id="new-rule-exchanges" 
+                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+                                   text-gray-700 dark:text-gray-300 py-2 px-3 pr-8 shadow-sm focus:border-blue-500 
+                                   focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
 
-            <!-- Rules List -->
+                <span class="text-gray-700 dark:text-gray-300">SPEND</span>
+                
+                <!-- USDT Amount Input -->
+                <div class="relative inline-block">
+                    <input type="number" id="new-rule-amount" 
+                           class="w-32 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+                                  text-gray-700 dark:text-gray-300 py-2 px-3 shadow-sm focus:border-blue-500 
+                                  focus:outline-none focus:ring-1 focus:ring-blue-500"
+                           placeholder="USDT amount">
+                </div>
+
+                <span class="text-gray-700 dark:text-gray-300">ON</span>
+                
+                <!-- Account Select -->
+                <div class="relative inline-block min-w-[200px]">
+                    <select id="new-rule-account" 
+                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+                                   text-gray-700 dark:text-gray-300 py-2 px-3 pr-8 shadow-sm focus:border-blue-500 
+                                   focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="">Select Account</option>
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- Action Buttons (hidden by default) -->
+                <div id="new-rule-controls" class="hidden space-x-2">
+                    <button onclick="saveNewRule()" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </button>
+                    <button onclick="clearNewRule()" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Existing Rules List -->
             <div id="automation-rules" class="grid gap-4">
                 <!-- Rules will be loaded here -->
             </div>
@@ -705,4 +750,103 @@
         editControls.classList.add('hidden');
         deleteBtn.classList.remove('hidden');
     }
+
+    async function loadExchangeOptions() {
+        try {
+            const response = await fetch('/trading/api/exchanges/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+            
+            const select = document.getElementById('new-rule-exchanges');
+            select.innerHTML = '';
+            
+            if (data.exchanges) {
+                data.exchanges.forEach(exchange => {
+                    const option = document.createElement('option');
+                    option.value = exchange.id;
+                    option.textContent = exchange.name;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading exchanges:', error);
+            showToast('Error loading exchanges', 'error');
+        }
+    }
+
+    function loadAccountOptions(accounts) {
+        const select = document.getElementById('new-rule-account');
+        select.innerHTML = '<option value="">Select Account</option>' + 
+            accounts.map(account => 
+                `<option value="${account.id}">${account.name}</option>`
+            ).join('');
+    }
+
+    function checkNewRuleInputs() {
+        const exchanges = document.getElementById('new-rule-exchanges');
+        const amount = document.getElementById('new-rule-amount');
+        const account = document.getElementById('new-rule-account');
+        const controls = document.getElementById('new-rule-controls');
+
+        if (exchanges.value && amount.value && account.value) {
+            controls.classList.remove('hidden');
+        } else {
+            controls.classList.add('hidden');
+        }
+    }
+
+    async function saveNewRule() {
+        const exchanges = Array.from(document.getElementById('new-rule-exchanges').selectedOptions)
+            .map(option => option.value);
+        const amount = document.getElementById('new-rule-amount').value;
+        const account = document.getElementById('new-rule-account').value;
+
+        try {
+            const response = await fetch('/trading/rules/', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    exchanges: exchanges,
+                    amount_usdt: amount,
+                    account: account
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showToast('Rule created successfully', 'success');
+                clearNewRule();
+                loadAutomationRules();
+            } else {
+                showToast(data.error || 'Failed to create rule', 'error');
+            }
+        } catch (error) {
+            console.error('Error creating rule:', error);
+            showToast('Error creating rule', 'error');
+        }
+    }
+
+    function clearNewRule() {
+        document.getElementById('new-rule-exchanges').value = '';
+        document.getElementById('new-rule-amount').value = '';
+        document.getElementById('new-rule-account').value = '';
+        document.getElementById('new-rule-controls').classList.add('hidden');
+    }
+
+    // Add event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        loadExchangeOptions();
+        
+        ['new-rule-exchanges', 'new-rule-amount', 'new-rule-account'].forEach(id => {
+            document.getElementById(id).addEventListener('change', checkNewRuleInputs);
+            document.getElementById(id).addEventListener('input', checkNewRuleInputs);
+        });
+    });
 </script> 

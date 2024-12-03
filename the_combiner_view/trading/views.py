@@ -4,7 +4,7 @@ from django.views import View
 from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
-from the_combiner_view.api_utils import TradeExternalApis
+from the_combiner_view.api_utils import TradeExternalApis, ClassifierExternalApis
 import requests
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
@@ -241,3 +241,11 @@ def get_account_balance(request, account_id):
             'success': False,
             'error': str(e)
         })
+
+def get_exchanges(request):
+    try:
+        classifier_api = ClassifierExternalApis()
+        exchanges = classifier_api.get_all_exchanges()
+        return JsonResponse({'success': True, 'exchanges': exchanges})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
