@@ -873,10 +873,31 @@
         loadExchangeOptions();
         loadAccountOptions();
         
-        ['new-rule-exchanges', 'new-rule-amount', 'new-rule-account'].forEach(id => {
-            document.getElementById(id).addEventListener('change', checkNewRuleInputs);
-            document.getElementById(id).addEventListener('input', checkNewRuleInputs);
-        });
+        // Only add listeners to elements that exist
+        const amountInput = document.getElementById('new-rule-amount');
+        const accountSelect = document.getElementById('new-rule-account');
+        
+        if (amountInput) {
+            amountInput.addEventListener('change', checkNewRuleInputs);
+            amountInput.addEventListener('input', checkNewRuleInputs);
+        }
+        
+        if (accountSelect) {
+            accountSelect.addEventListener('change', checkNewRuleInputs);
+            accountSelect.addEventListener('input', checkNewRuleInputs);
+        }
+        
+        // Add event listener to the exchange display div for changes
+        const exchangeDisplay = document.getElementById('exchange-display');
+        if (exchangeDisplay) {
+            // Create a MutationObserver to watch for changes to the exchange display
+            const observer = new MutationObserver(checkNewRuleInputs);
+            observer.observe(exchangeDisplay, { 
+                childList: true, 
+                characterData: true, 
+                subtree: true 
+            });
+        }
     });
 
     function toggleExchangeDropdown() {
@@ -933,6 +954,15 @@
         }
         .dark #exchange-dropdown div:hover {
             background-color: #4b5563; /* Hover background for dark mode */
+        }
+        /* Hide the spinner for number inputs */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield; /* Firefox */
         }
     `;
     document.head.appendChild(style);
