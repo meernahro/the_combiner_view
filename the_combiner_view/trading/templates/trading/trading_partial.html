@@ -777,12 +777,34 @@
         }
     }
 
-    function loadAccountOptions(accounts) {
-        const select = document.getElementById('new-rule-account');
-        select.innerHTML = '<option value="">Select Account</option>' + 
-            accounts.map(account => 
-                `<option value="${account.id}">${account.name}</option>`
-            ).join('');
+    async function loadAccountOptions() {
+        try {
+            const response = await fetch('/trading/api/accounts/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+            
+            const select = document.getElementById('new-rule-account');
+            select.innerHTML = '<option value="">Select Account</option>';
+            
+            // Log the response to see its structure
+            console.log('Accounts response:', data);
+            
+            // Access the accounts array within the data object
+            if (data.success && data.data && data.data.status === 'success' && Array.isArray(data.data.accounts)) {
+                data.data.accounts.forEach(account => {
+                    const option = document.createElement('option');
+                    option.value = account.id;
+                    option.textContent = account.name || account.exchange;  // Use name or exchange as display text
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading accounts:', error);
+            showToast('Error loading accounts', 'error');
+        }
     }
 
     function checkNewRuleInputs() {
@@ -843,6 +865,7 @@
     // Add event listeners
     document.addEventListener('DOMContentLoaded', () => {
         loadExchangeOptions();
+        loadAccountOptions();
         
         ['new-rule-exchanges', 'new-rule-amount', 'new-rule-account'].forEach(id => {
             document.getElementById(id).addEventListener('change', checkNewRuleInputs);

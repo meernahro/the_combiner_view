@@ -249,3 +249,34 @@ def get_exchanges(request):
         return JsonResponse({'success': True, 'exchanges': exchanges})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+def get_accounts(request):
+    try:
+        trade_api = TradeExternalApis()
+        response = trade_api.get_user_accounts(request.user.username)
+        
+        # Log the response to see its structure
+        print("API Response:", response)
+        
+        # Extract accounts from the response
+        if isinstance(response, dict):
+            if 'data' in response:
+                accounts = response['data']
+            else:
+                accounts = response  # The response might be the accounts directly
+                
+            return JsonResponse({
+                'success': True,
+                'data': accounts
+            })
+        
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid response format from API'
+        })
+    except Exception as e:
+        print("Error fetching accounts:", str(e))  # Add logging
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
