@@ -442,6 +442,16 @@
         `;
         document.head.appendChild(style);
 
+        // Add event listeners after rendering
+        setTimeout(() => {
+            document.querySelectorAll('[contenteditable="true"]').forEach(element => {
+                element.addEventListener('focus', showEditControls);
+                element.addEventListener('blur', handleBlur);
+                // Store original value when starting edit
+                element.dataset.originalValue = element.textContent.trim();
+            });
+        }, 0);
+
         container.innerHTML = `
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -469,7 +479,7 @@
                             }
 
                             return `
-                                <tr class="${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}">
+                                <tr class="${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}" data-rule-id="${rule.id}">
                                     <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                         ${rule.id}
                                     </td>
@@ -505,12 +515,23 @@
                                         </button>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                        <button onclick="saveRuleChanges(${rule.id}, this)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1">
-                                            Save
-                                        </button>
-                                        <button onclick="deleteRule(${rule.id})" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                        <!-- Edit controls (hidden by default) -->
+                                        <div class="edit-controls hidden inline-flex gap-2">
+                                            <button onclick="acceptEdit(this)" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </button>
+                                            <button onclick="cancelEdit(this)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <!-- Delete button -->
+                                        <button onclick="deleteRule(${rule.id})" class="delete-btn text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>
                                         </button>
                                     </td>
@@ -596,8 +617,35 @@
         }
     }
 
-    async function saveRuleChanges(ruleId, buttonElement) {
-        const row = buttonElement.closest('tr');
+    // Show edit controls when a field is being edited
+    function showEditControls(event) {
+        const row = event.target.closest('tr');
+        const editControls = row.querySelector('.edit-controls');
+        const deleteBtn = row.querySelector('.delete-btn');
+        
+        editControls.classList.remove('hidden');
+        deleteBtn.classList.add('hidden');
+    }
+
+    // Handle blur event
+    function handleBlur(event) {
+        // Don't hide controls if clicking within the same row
+        setTimeout(() => {
+            const row = event.target.closest('tr');
+            if (!row.contains(document.activeElement)) {
+                const editControls = row.querySelector('.edit-controls');
+                const deleteBtn = row.querySelector('.delete-btn');
+                
+                editControls.classList.add('hidden');
+                deleteBtn.classList.remove('hidden');
+            }
+        }, 100);
+    }
+
+    // Accept edit changes
+    async function acceptEdit(button) {
+        const row = button.closest('tr');
+        const ruleId = row.dataset.ruleId;
         const fields = row.querySelectorAll('[contenteditable="true"]');
         const data = {};
 
@@ -624,6 +672,10 @@
             const result = await response.json();
             if (result.success) {
                 showToast('Rule updated successfully', 'success');
+                // Update original values
+                fields.forEach(field => {
+                    field.dataset.originalValue = field.textContent.trim();
+                });
             } else {
                 console.error('Failed to update rule:', result.error);
                 showToast(result.error || 'Failed to update rule', 'error');
@@ -632,5 +684,28 @@
             console.error('Error updating rule:', error);
             showToast('Error updating rule', 'error');
         }
+
+        // Hide edit controls
+        const editControls = row.querySelector('.edit-controls');
+        const deleteBtn = row.querySelector('.delete-btn');
+        editControls.classList.add('hidden');
+        deleteBtn.classList.remove('hidden');
+    }
+
+    // Cancel edit changes
+    function cancelEdit(button) {
+        const row = button.closest('tr');
+        const fields = row.querySelectorAll('[contenteditable="true"]');
+        
+        // Revert to original values
+        fields.forEach(field => {
+            field.textContent = field.dataset.originalValue;
+        });
+
+        // Hide edit controls
+        const editControls = row.querySelector('.edit-controls');
+        const deleteBtn = row.querySelector('.delete-btn');
+        editControls.classList.add('hidden');
+        deleteBtn.classList.remove('hidden');
     }
 </script> 
