@@ -841,7 +841,7 @@
 
     async function saveNewRule() {
         const selectedExchanges = Array.from(document.querySelectorAll('#exchange-dropdown .selected'))
-            .map(option => option.dataset.value);
+            .map(option => option.textContent.trim());
         const marketType = document.getElementById('new-rule-market-type').value;
         const amount = document.getElementById('new-rule-amount').value;
         const account = document.getElementById('new-rule-account').value;
