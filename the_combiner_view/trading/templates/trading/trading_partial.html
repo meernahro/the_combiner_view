@@ -445,9 +445,8 @@
         // Add event listeners after rendering
         setTimeout(() => {
             document.querySelectorAll('[contenteditable="true"]').forEach(element => {
-                element.addEventListener('focus', showEditControls);
-                element.addEventListener('blur', handleBlur);
-                // Store original value when starting edit
+                element.addEventListener('input', handleInput);
+                // Store original value when rendering
                 element.dataset.originalValue = element.textContent.trim();
             });
         }, 0);
@@ -617,29 +616,28 @@
         }
     }
 
-    // Show edit controls when a field is being edited
-    function showEditControls(event) {
-        const row = event.target.closest('tr');
+    // Handle input changes
+    function handleInput(event) {
+        const element = event.target;
+        const row = element.closest('tr');
         const editControls = row.querySelector('.edit-controls');
         const deleteBtn = row.querySelector('.delete-btn');
         
-        editControls.classList.remove('hidden');
-        deleteBtn.classList.add('hidden');
-    }
+        // Compare current value with original value
+        const currentValue = element.textContent.trim();
+        const originalValue = element.dataset.originalValue;
+        
+        // Check if any field in the row has changes
+        const hasChanges = Array.from(row.querySelectorAll('[contenteditable="true"]'))
+            .some(field => field.textContent.trim() !== field.dataset.originalValue);
 
-    // Handle blur event
-    function handleBlur(event) {
-        // Don't hide controls if clicking within the same row
-        setTimeout(() => {
-            const row = event.target.closest('tr');
-            if (!row.contains(document.activeElement)) {
-                const editControls = row.querySelector('.edit-controls');
-                const deleteBtn = row.querySelector('.delete-btn');
-                
-                editControls.classList.add('hidden');
-                deleteBtn.classList.remove('hidden');
-            }
-        }, 100);
+        if (hasChanges) {
+            editControls.classList.remove('hidden');
+            deleteBtn.classList.add('hidden');
+        } else {
+            editControls.classList.add('hidden');
+            deleteBtn.classList.remove('hidden');
+        }
     }
 
     // Accept edit changes
@@ -676,6 +674,11 @@
                 fields.forEach(field => {
                     field.dataset.originalValue = field.textContent.trim();
                 });
+                // Hide edit controls since values are now saved
+                const editControls = row.querySelector('.edit-controls');
+                const deleteBtn = row.querySelector('.delete-btn');
+                editControls.classList.add('hidden');
+                deleteBtn.classList.remove('hidden');
             } else {
                 console.error('Failed to update rule:', result.error);
                 showToast(result.error || 'Failed to update rule', 'error');
@@ -684,12 +687,6 @@
             console.error('Error updating rule:', error);
             showToast('Error updating rule', 'error');
         }
-
-        // Hide edit controls
-        const editControls = row.querySelector('.edit-controls');
-        const deleteBtn = row.querySelector('.delete-btn');
-        editControls.classList.add('hidden');
-        deleteBtn.classList.remove('hidden');
     }
 
     // Cancel edit changes
