@@ -28,6 +28,21 @@
                     </div>
                 </div>
 
+                <span class="text-gray-700 dark:text-gray-300">FOR</span>
+
+                <!-- Market Type Select -->
+                <div class="relative inline-block min-w-[120px]">
+                    <select id="new-rule-market-type" 
+                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+                                   text-gray-700 dark:text-gray-300 py-2 px-3 pr-8 shadow-sm focus:border-blue-500 
+                                   focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="">Select Market</option>
+                        <option value="spot">Spot</option>
+                        <option value="future">Future</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+
                 <span class="text-gray-700 dark:text-gray-300">SPEND</span>
                 
                 <!-- USDT Amount Input -->
@@ -812,11 +827,12 @@
 
     function checkNewRuleInputs() {
         const selectedExchanges = document.querySelectorAll('#exchange-dropdown .selected').length > 0;
+        const marketType = document.getElementById('new-rule-market-type').value;
         const amount = document.getElementById('new-rule-amount').value;
         const account = document.getElementById('new-rule-account').value;
         const controls = document.getElementById('new-rule-controls');
 
-        if (selectedExchanges && amount && account) {
+        if (selectedExchanges && marketType && amount && account) {
             controls.classList.remove('hidden');
         } else {
             controls.classList.add('hidden');
@@ -826,6 +842,7 @@
     async function saveNewRule() {
         const selectedExchanges = Array.from(document.querySelectorAll('#exchange-dropdown .selected'))
             .map(option => option.dataset.value);
+        const marketType = document.getElementById('new-rule-market-type').value;
         const amount = document.getElementById('new-rule-amount').value;
         const account = document.getElementById('new-rule-account').value;
 
@@ -839,6 +856,7 @@
                 },
                 body: JSON.stringify({
                     exchanges: selectedExchanges,
+                    market_type: marketType,
                     amount_usdt: amount,
                     account: account
                 })
@@ -863,19 +881,25 @@
             option.classList.remove('selected');
         });
         document.getElementById('exchange-display').textContent = 'Select Exchanges';
+        document.getElementById('new-rule-market-type').value = '';
         document.getElementById('new-rule-amount').value = '';
         document.getElementById('new-rule-account').value = '';
         document.getElementById('new-rule-controls').classList.add('hidden');
     }
 
-    // Add event listeners
+    // Update the DOMContentLoaded event listener to include the market type field
     document.addEventListener('DOMContentLoaded', () => {
         loadExchangeOptions();
         loadAccountOptions();
         
         // Only add listeners to elements that exist
+        const marketTypeSelect = document.getElementById('new-rule-market-type');
         const amountInput = document.getElementById('new-rule-amount');
         const accountSelect = document.getElementById('new-rule-account');
+        
+        if (marketTypeSelect) {
+            marketTypeSelect.addEventListener('change', checkNewRuleInputs);
+        }
         
         if (amountInput) {
             amountInput.addEventListener('change', checkNewRuleInputs);
@@ -884,7 +908,6 @@
         
         if (accountSelect) {
             accountSelect.addEventListener('change', checkNewRuleInputs);
-            accountSelect.addEventListener('input', checkNewRuleInputs);
         }
         
         // Add event listener to the exchange display div for changes
