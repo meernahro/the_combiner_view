@@ -17,14 +17,15 @@
             <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4 flex items-center gap-3">
                 <span class="text-gray-700 dark:text-gray-300">IF LISTING ON</span>
                 
-                <!-- Exchanges Multi-select -->
+                <!-- Custom Exchanges Multi-select -->
                 <div class="relative inline-block min-w-[200px]">
-                    <select multiple id="new-rule-exchanges" 
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
-                                   text-gray-700 dark:text-gray-300 py-2 px-3 pr-8 shadow-sm focus:border-blue-500 
-                                   focus:outline-none focus:ring-1 focus:ring-blue-500">
-                        <!-- Will be populated dynamically -->
-                    </select>
+                    <div id="exchange-display" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+                            text-gray-700 dark:text-gray-300 py-2 px-3 shadow-sm cursor-pointer" onclick="toggleExchangeDropdown()">
+                        Select Exchanges
+                    </div>
+                    <div id="exchange-dropdown" class="absolute z-10 hidden w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 
+                            dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    </div>
                 </div>
 
                 <span class="text-gray-700 dark:text-gray-300">SPEND</span>
@@ -760,15 +761,17 @@
             });
             const data = await response.json();
             
-            const select = document.getElementById('new-rule-exchanges');
-            select.innerHTML = '';
+            const dropdown = document.getElementById('exchange-dropdown');
+            dropdown.innerHTML = '';
             
             if (data.exchanges) {
                 data.exchanges.forEach(exchange => {
-                    const option = document.createElement('option');
-                    option.value = exchange.id;
+                    const option = document.createElement('div');
+                    option.className = 'px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors';
+                    option.dataset.value = exchange.id;
                     option.textContent = exchange.name;
-                    select.appendChild(option);
+                    option.onclick = handleExchangeClick;
+                    dropdown.appendChild(option);
                 });
             }
         } catch (error) {
@@ -808,12 +811,12 @@
     }
 
     function checkNewRuleInputs() {
-        const exchanges = document.getElementById('new-rule-exchanges');
-        const amount = document.getElementById('new-rule-amount');
-        const account = document.getElementById('new-rule-account');
+        const selectedExchanges = document.querySelectorAll('#exchange-dropdown .selected').length > 0;
+        const amount = document.getElementById('new-rule-amount').value;
+        const account = document.getElementById('new-rule-account').value;
         const controls = document.getElementById('new-rule-controls');
 
-        if (exchanges.value && amount.value && account.value) {
+        if (selectedExchanges && amount && account) {
             controls.classList.remove('hidden');
         } else {
             controls.classList.add('hidden');
@@ -821,8 +824,8 @@
     }
 
     async function saveNewRule() {
-        const exchanges = Array.from(document.getElementById('new-rule-exchanges').selectedOptions)
-            .map(option => option.value);
+        const selectedExchanges = Array.from(document.querySelectorAll('#exchange-dropdown .selected'))
+            .map(option => option.dataset.value);
         const amount = document.getElementById('new-rule-amount').value;
         const account = document.getElementById('new-rule-account').value;
 
@@ -835,7 +838,7 @@
                     'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({
-                    exchanges: exchanges,
+                    exchanges: selectedExchanges,
                     amount_usdt: amount,
                     account: account
                 })
@@ -856,7 +859,10 @@
     }
 
     function clearNewRule() {
-        document.getElementById('new-rule-exchanges').value = '';
+        document.querySelectorAll('#exchange-dropdown .selected').forEach(option => {
+            option.classList.remove('selected');
+        });
+        document.getElementById('exchange-display').textContent = 'Select Exchanges';
         document.getElementById('new-rule-amount').value = '';
         document.getElementById('new-rule-account').value = '';
         document.getElementById('new-rule-controls').classList.add('hidden');
@@ -872,4 +878,62 @@
             document.getElementById(id).addEventListener('input', checkNewRuleInputs);
         });
     });
+
+    function toggleExchangeDropdown() {
+        const dropdown = document.getElementById('exchange-dropdown');
+        dropdown.classList.toggle('hidden');
+    }
+
+    function handleExchangeClick(event) {
+        event.preventDefault();
+        const option = event.target;
+        if (option.tagName === 'DIV') {
+            option.classList.toggle('selected');
+            updateExchangeDisplay();
+            checkNewRuleInputs();
+        }
+    }
+
+    function updateExchangeDisplay() {
+        const dropdown = document.getElementById('exchange-dropdown');
+        const display = document.getElementById('exchange-display');
+        const selectedOptions = Array.from(dropdown.querySelectorAll('.selected'))
+            .map(option => option.textContent.trim());
+        display.textContent = selectedOptions.length > 0 ? selectedOptions.join(', ') : 'Select Exchanges';
+    }
+
+    // Close the dropdown when clicking outside
+    document.addEventListener('click', (event) => {
+        const dropdown = document.getElementById('exchange-dropdown');
+        const display = document.getElementById('exchange-display');
+        if (!dropdown.contains(event.target) && !display.contains(event.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Add some CSS for the selected state and ensure text color matches the system theme
+    const style = document.createElement('style');
+    style.textContent = `
+        #exchange-dropdown .selected {
+            background-color: #e5edff;
+            color: #1a56db;
+        }
+        .dark #exchange-dropdown .selected {
+            background-color: #1e40af;
+            color: #e5edff;
+        }
+        #exchange-dropdown div {
+            color: #374151; /* Default text color for light mode */
+        }
+        .dark #exchange-dropdown div {
+            color: #d1d5db; /* Default text color for dark mode */
+        }
+        #exchange-dropdown div:hover {
+            background-color: #f3f4f6; /* Hover background for light mode */
+        }
+        .dark #exchange-dropdown div:hover {
+            background-color: #4b5563; /* Hover background for dark mode */
+        }
+    `;
+    document.head.appendChild(style);
 </script> 
