@@ -138,23 +138,24 @@ class AutomationRuleView(LoginRequiredMixin, View):
             rule = AutomationRule.objects.get(id=rule_id)
             data = json.loads(request.body)
             
-            if 'status' in data and data['status'] in dict(AutomationRule.STATUS_CHOICES):
-                rule.status = data['status']
-                rule.save()
-                
-                return JsonResponse({
-                    'success': True,
-                    'rule': {
-                        'id': rule.id,
-                        'status': rule.status,
-                    }
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Invalid status value'
-                }, status=400)
-                
+            # Update fields if they exist in the request
+            for field in ['account', 'exchanges', 'market_type', 'amount_usdt', 'status']:
+                if field in data:
+                    setattr(rule, field, data[field])
+            
+            rule.save()
+            
+            return JsonResponse({
+                'success': True,
+                'rule': {
+                    'id': rule.id,
+                    'account': rule.account,
+                    'exchanges': rule.exchanges,
+                    'market_type': rule.market_type,
+                    'amount_usdt': rule.amount_usdt,
+                    'status': rule.status,
+                }
+            })
         except AutomationRule.DoesNotExist:
             return JsonResponse({
                 'success': False,
