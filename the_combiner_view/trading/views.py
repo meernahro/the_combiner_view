@@ -8,6 +8,8 @@ from the_combiner_view.api_utils import TradeExternalApis
 import requests
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
+from .models import AutomationRule
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +59,66 @@ class TradingAccountsView(LoginRequiredMixin, View):
             })
             
         return render(request, 'trading/accounts.html', context)
+
+
+
+class AutomationRuleView(LoginRequiredMixin, View):
+    def get(self, request, rule_id=None):
+        if rule_id:
+            try:
+                rule = AutomationRule.objects.get(id=rule_id)
+                return JsonResponse({
+                    'success': True,
+                    'rule': {
+                        'id': rule.id,
+                        'exchanges': rule.exchanges,
+                        'market_type': rule.market_type,
+                        'account': rule.account,
+                        'amount_usdt': rule.amount_usdt,
+                        'status': rule.status,
+                    }
+                })
+            except AutomationRule.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Rule not found'
+                }, status=404)
+        
+        rules = AutomationRule.objects.all()
+        return JsonResponse({
+            'success': True,
+            'rules': [{
+                'id': rule.id,
+                'exchanges': rule.exchanges,
+                'market_type': rule.market_type,
+                'account': rule.account,
+                'amount_usdt': rule.amount_usdt,
+                'status': rule.status,
+            } for rule in rules]
+        })
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            if isinstance(data['exchanges'], str):
+                data['exchanges'] = json.loads(data['exchanges'])
+            rule = AutomationRule.objects.create(**data)
+            return JsonResponse({
+                'success': True,
+                'rule': {
+                    'id': rule.id,
+                    'exchanges': rule.exchanges,
+                    'market_type': rule.market_type,
+                    'account': rule.account,
+                    'amount_usdt': rule.amount_usdt,
+                    'status': rule.status,
+                }
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
 
 @login_required
 @require_http_methods(["POST"])
