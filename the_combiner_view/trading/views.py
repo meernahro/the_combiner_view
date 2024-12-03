@@ -9,6 +9,8 @@ import requests
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from .models import AutomationRule
+from django.views.decorators.csrf import csrf_protect
+from django.utils.decorators import method_decorator
 
 
 logger = logging.getLogger(__name__)
@@ -62,6 +64,7 @@ class TradingAccountsView(LoginRequiredMixin, View):
 
 
 
+@method_decorator(csrf_protect, name='dispatch')
 class AutomationRuleView(LoginRequiredMixin, View):
     def get(self, request, rule_id=None):
         if rule_id:
@@ -119,6 +122,54 @@ class AutomationRuleView(LoginRequiredMixin, View):
                 'success': False,
                 'error': str(e)
             }, status=400)
+
+    def delete(self, request, rule_id):
+        try:
+            rule = AutomationRule.objects.get(id=rule_id)
+            rule.delete()
+            return JsonResponse({'success': True})
+        except AutomationRule.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Rule not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+    def patch(self, request, rule_id):
+        try:
+            rule = AutomationRule.objects.get(id=rule_id)
+            data = json.loads(request.body)
+            
+            if 'status' in data and data['status'] in dict(AutomationRule.STATUS_CHOICES):
+                rule.status = data['status']
+                rule.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'rule': {
+                        'id': rule.id,
+                        'status': rule.status,
+                    }
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid status value'
+                }, status=400)
+                
+        except AutomationRule.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Rule not found'
+            }, status=404)
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid JSON data'
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
 
 @login_required
 @require_http_methods(["POST"])
