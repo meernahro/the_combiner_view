@@ -5,7 +5,7 @@ services:
     build:
       context: .
     ports:
-      - "${DJANGO_PORT}:${DJANGO_PORT}"  # Only expose port 7999
+      - "127.0.0.1:${DJANGO_PORT}:${DJANGO_PORT}"  # Only expose port 7999
     volumes:
       - django_data:/app/data
     restart: unless-stopped
