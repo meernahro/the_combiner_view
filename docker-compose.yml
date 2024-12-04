@@ -5,15 +5,18 @@ services:
     build:
       context: .
     ports:
-      - "${DJANGO_PORT}:${DJANGO_PORT}"
-      - "${TRADE_API_PORT}:${TRADE_API_PORT}"
-      - "${CLASSIFIER_API_PORT}:${CLASSIFIER_API_PORT}"
-      - "${EXTERNAL_WS_PORT}:${EXTERNAL_WS_PORT}"
+      - "${DJANGO_PORT}:${DJANGO_PORT}"  # Only expose port 7999
     volumes:
       - django_data:/app/data
     restart: unless-stopped
     env_file:
       - .env
+    networks:
+      - shared_network
 
 volumes:
   django_data:
+
+networks:
+  shared_network:
+    external: true
