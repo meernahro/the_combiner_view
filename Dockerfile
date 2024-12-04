@@ -22,5 +22,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application code
 COPY . .
 
-# Command to run Daphne
-CMD ["daphne","-b", "0.0.0.0", "-p", "7999", "the_combiner_view.asgi:application"]
+# Make entrypoint script executable
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+# Use entrypoint script
+ENTRYPOINT ["./entrypoint.sh"]

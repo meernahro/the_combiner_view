@@ -11,4 +11,10 @@ services:
       - "${EXTERNAL_WS_PORT}:${EXTERNAL_WS_PORT}"
     volumes:
       - .:/app
+      - django_data:/app/data
     restart: unless-stopped
+    env_file:
+      - .env
+
+volumes:
+  django_data:
