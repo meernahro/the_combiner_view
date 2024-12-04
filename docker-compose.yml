@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  web:
+    build:
+      context: .
+    ports:
+      - "${DJANGO_PORT}:${DJANGO_PORT}"
+      - "${TRADE_API_PORT}:${TRADE_API_PORT}"
+      - "${CLASSIFIER_API_PORT}:${CLASSIFIER_API_PORT}"
+      - "${EXTERNAL_WS_PORT}:${EXTERNAL_WS_PORT}"
+    volumes:
+      - .:/app
+    restart: unless-stopped

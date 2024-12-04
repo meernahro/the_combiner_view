@@ -5,7 +5,7 @@ import time
 from typing import Optional, Callable
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-
+import os
 class ExternalWebSocketService:
     _instance = None
     
@@ -35,7 +35,7 @@ class ExternalWebSocketService:
         
         try:
             self.external_ws = websocket.WebSocketApp(
-                "ws://127.0.0.1:8766",
+                os.getenv("EXTERNAL_WS_URL"),
                 on_open=self.on_external_open,
                 on_close=self.on_external_close,
                 on_error=self.on_external_error,

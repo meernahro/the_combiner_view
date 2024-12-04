@@ -29,13 +29,14 @@ and UI layer on top of these specialized services.
 
 import requests
 from typing import Dict, Any, Optional, List
+import os
 
 class TradeExternalApis:
     """
     Utility class to interact with external trading APIs.
     """
     def __init__(self):
-        self.TRADE_BASE_URL = "http://localhost:8082"
+        self.TRADE_BASE_URL = os.getenv("TRADE_API_URL")
         self.headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -187,7 +188,7 @@ class ClassifierExternalApis:
     """
     Utility class to interact with the Telegram Token Tracker API.
     """
-    CLASSIFIER_BASE_URL = "http://127.0.0.1:8083"
+    CLASSIFIER_BASE_URL = os.getenv("CLASSIFIER_API_URL")
 
     # Health Check
     def health_check(self) -> Dict[str, Any]:
