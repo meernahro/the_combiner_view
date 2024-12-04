@@ -77,6 +77,8 @@ class ExternalWebSocketService:
         try:
             print(f"Received message from external server: {message}")
             # Broadcast message to all connected clients
+            from .automation_handler import AutomationHandler
+            AutomationHandler.process_message(message)
             async_to_sync(self.channel_layer.group_send)(
                 "trading",
                 {
