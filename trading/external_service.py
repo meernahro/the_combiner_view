@@ -27,6 +27,8 @@ class ExternalWebSocketService:
         return cls._instance
 
     def connect_to_external(self):
+        environment = os.getenv("ENVIRONMENT")
+        external_ws_url = os.getenv("DEV_EXTERNAL_WS_URL") if environment == "development" else os.getenv("EXTERNAL_WS_URL")
         if self.external_ws:
             try:
                 self.external_ws.close()
@@ -35,7 +37,7 @@ class ExternalWebSocketService:
         
         try:
             self.external_ws = websocket.WebSocketApp(
-                os.getenv("EXTERNAL_WS_URL"),
+                external_ws_url,
                 on_open=self.on_external_open,
                 on_close=self.on_external_close,
                 on_error=self.on_external_error,

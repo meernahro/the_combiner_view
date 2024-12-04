@@ -36,7 +36,8 @@ class TradeExternalApis:
     Utility class to interact with external trading APIs.
     """
     def __init__(self):
-        self.TRADE_BASE_URL = os.getenv("TRADE_API_URL")
+        self.environment = os.getenv("ENVIRONMENT")
+        self.TRADE_BASE_URL = os.getenv("DEV_TRADE_API_URL") if self.environment == "development" else os.getenv("TRADE_API_URL")
         self.headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -188,7 +189,8 @@ class ClassifierExternalApis:
     """
     Utility class to interact with the Telegram Token Tracker API.
     """
-    CLASSIFIER_BASE_URL = os.getenv("CLASSIFIER_API_URL")
+    environment = os.getenv("ENVIRONMENT")
+    CLASSIFIER_BASE_URL = os.getenv("DEV_CLASSIFIER_API_URL") if environment == "development" else os.getenv("CLASSIFIER_API_URL")
 
     # Health Check
     def health_check(self) -> Dict[str, Any]:
