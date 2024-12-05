@@ -8,13 +8,25 @@
                         <div class="mt-0.5 flex space-x-1">
                             {% with exchange_colors=token.exchange|lower %}
                                 {% if exchange_colors == 'binance' %}
-                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100">
+                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-100">
                                 {% elif exchange_colors == 'bybit' %}
-                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-100">
+                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 border-purple-300 dark:border-purple-700 text-purple-800 dark:text-purple-100">
                                 {% elif exchange_colors == 'kucoin' %}
-                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-100">
+                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-100">
+                                {% elif exchange_colors == 'coinbaseint' %}
+                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-100">
+                                {% elif exchange_colors == 'coinbase' %}
+                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900 border-indigo-300 dark:border-indigo-700 text-indigo-800 dark:text-indigo-100">
+                                {% elif exchange_colors == 'bitget' %}
+                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-100">
+                                {% elif exchange_colors == 'upbit' %}
+                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 dark:bg-teal-900 border-teal-300 dark:border-teal-700 text-teal-800 dark:text-teal-100">
+                                {% elif exchange_colors == 'bithumb' %}
+                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 dark:bg-rose-900 border-rose-300 dark:border-rose-700 text-rose-800 dark:text-rose-100">
+                                {% elif exchange_colors == 'okx' %}
+                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 dark:bg-cyan-900 border-cyan-300 dark:border-cyan-700 text-cyan-800 dark:text-cyan-100">
                                 {% else %}
-                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100">
                                 {% endif %}
                                     {{ token.exchange|title }}
                                 </span>
