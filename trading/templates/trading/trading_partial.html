@@ -106,6 +106,8 @@
     <div id="token-toasts" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 
     <audio id="notification-sound" src="{% static 'sounds/notification.mp3' %}" preload="auto" loop></audio>
+
+    <div id="trade-toasts" class="fixed bottom-4 left-4 space-y-2 z-50 max-w-md"></div>
 </div>
 
 <script>
@@ -346,8 +348,6 @@
         tradingSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             
-            
-
             if (data.type === 'connection_status') {
                 const statusElement = document.getElementById('trading-status');
                 const statusDot = statusElement.querySelector('.status-dot');
@@ -373,6 +373,8 @@
                     toastContainer.appendChild(toast);
                 });
                 refreshLatestTokens();
+            } else if (data.type === 'mexc_trade') {
+                createTradeToast(data.data);
             }
         };
 
@@ -1023,4 +1025,42 @@
         }
     `;
     document.head.appendChild(style);
+
+    function createTradeToast(response) {
+        const toast = document.createElement('div');
+        const isSuccess = response._metadata?.status_code === 200;
+        const symbol = response._metadata?.symbol || 'Unknown';
+        const amount = response._metadata?.amount || 0;
+        
+        let statusClass, message;
+        
+        if (isSuccess) {
+            statusClass = 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/90';  // Changed /50 to /75
+            message = `Successfully placed order for ${symbol}: ${amount} USDT`;
+        } else {
+            statusClass = 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/90';  // Changed /50 to /75
+            const errorMsg = response.detail?.msg || 'Unknown error';
+            const attempt = response._metadata?.attempt || 1;
+            message = `Failed to place order for ${symbol} (Attempt ${attempt}): ${errorMsg}`;
+        }
+
+        toast.className = `relative flex items-center justify-between p-4 border rounded-lg shadow-lg ${statusClass}`;
+        toast.innerHTML = `
+            <div class="flex-1 mr-4">
+                <p class="text-sm ${isSuccess ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}">
+                    ${message}
+                </p>
+            </div>
+            <button class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        `;
+
+        const closeBtn = toast.querySelector('button');
+        closeBtn.onclick = () => toast.remove();
+
+        document.getElementById('trade-toasts').appendChild(toast);
+    }
 </script> 

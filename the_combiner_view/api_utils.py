@@ -30,6 +30,7 @@ and UI layer on top of these specialized services.
 import requests
 from typing import Dict, Any, Optional, List
 import os
+import time
 
 class TradeExternalApis:
     """
@@ -149,10 +150,35 @@ class TradeExternalApis:
         response = requests.get(url, headers=self.headers, params=params)
         return response.json()
 
-    def create_mexc_order(self, account_id: int, order_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_mexc_order(self, account_id: int, order_data: Dict[str, Any], max_retries: int = 3) -> Dict[str, Any]:
         url = f"{self.TRADE_BASE_URL}/mexc/spot/{account_id}/order"
-        response = requests.post(url, json=order_data, headers=self.headers)
-        return response.json()
+        attempt = 1
+        
+        while attempt <= max_retries:
+            response = requests.post(url, json=order_data, headers=self.headers)
+            status_code = response.status_code
+            response_data = response.json()
+            
+            # Add metadata to help frontend handle the response
+            response_data['_metadata'] = {
+                'attempt': attempt,
+                'status_code': status_code,
+                'symbol': order_data.get('symbol'),
+                'amount': order_data.get('quote_order_qty')
+            }
+            
+            # Success case
+            if status_code == 200:
+                return response_data
+                
+            # Retry cases (400 and 502)
+            if status_code in [400, 502] and attempt < max_retries:
+                attempt += 1
+                time.sleep(0.1)  # Wait 1 second between retries
+                continue
+                
+            # Return last failed attempt
+            return response_data
 
     def cancel_mexc_order(self, account_id: int, symbol: str, order_id: str) -> Dict[str, Any]:
         url = f"{self.TRADE_BASE_URL}/mexc/spot/{account_id}/order/{symbol}/{order_id}"

@@ -2,6 +2,8 @@ import logging
 from typing import List, Dict, Any
 from .models import AutomationRule
 from the_combiner_view.api_utils import TradeExternalApis
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 logger = logging.getLogger(__name__)
 trade_api = TradeExternalApis()
@@ -68,6 +70,19 @@ class AutomationHandler:
                 print(f"      Sending MEXC market order: {order_data}")
                 response = trade_api.create_mexc_order(account_id, order_data)
                 print(f"      MEXC Order Response: {response}")
+                
+                # Emit WebSocket message for trade notification
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "trading",
+                    {
+                        "type": "trade_notification",
+                        "message": {
+                            "type": "mexc_trade",
+                            "data": response
+                        }
+                    }
+                )
             else:
                 print(f"      Unsupported exchange: {account_info['exchange']}")
 

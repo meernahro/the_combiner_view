@@ -34,4 +34,14 @@ class TradingConsumer(WebsocketConsumer):
         self.send(json.dumps({
             'type': 'connection_status',
             'is_external_connected': event["is_external_connected"]
+        }))
+
+    def trade_notification(self, event):
+        """
+        Handler for trade notifications.
+        """
+        # Forward the message to WebSocket
+        self.send(text_data=json.dumps({
+            'type': event['message']['type'],
+            'data': event['message']['data']
         })) 
