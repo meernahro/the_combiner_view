@@ -66,10 +66,28 @@ class TradingAccountsView(LoginRequiredMixin, View):
 
 @method_decorator(csrf_protect, name='dispatch')
 class AutomationRuleView(LoginRequiredMixin, View):
+    def __init__(self):
+        super().__init__()
+        self.trade_api = TradeExternalApis()
+
+    def get_user_accounts(self, username):
+        try:
+            user_data = self.trade_api.get_user_accounts(username)
+            if user_data.get('status') == 'success':
+                return [str(account['id']) for account in user_data.get('accounts', [])]
+            return []
+        except Exception as e:
+            logger.error(f"Error fetching user accounts: {e}")
+            return []
+
     def get(self, request, rule_id=None):
+        # Get user's account IDs
+        user_account_ids = self.get_user_accounts(request.user.username)
+        
         if rule_id:
             try:
-                rule = AutomationRule.objects.get(id=rule_id)
+                # Filter by both ID and user's accounts
+                rule = AutomationRule.objects.get(id=rule_id, account__in=user_account_ids)
                 return JsonResponse({
                     'success': True,
                     'rule': {
@@ -87,7 +105,8 @@ class AutomationRuleView(LoginRequiredMixin, View):
                     'error': 'Rule not found'
                 }, status=404)
         
-        rules = AutomationRule.objects.all()
+        # Filter rules by user's accounts
+        rules = AutomationRule.objects.filter(account__in=user_account_ids)
         return JsonResponse({
             'success': True,
             'rules': [{
@@ -103,6 +122,15 @@ class AutomationRuleView(LoginRequiredMixin, View):
     def post(self, request):
         try:
             data = json.loads(request.body)
+            
+            # Verify the account belongs to the user
+            user_account_ids = self.get_user_accounts(request.user.username)
+            if str(data.get('account')) not in user_account_ids:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid account ID'
+                }, status=403)
+
             if isinstance(data['exchanges'], str):
                 data['exchanges'] = json.loads(data['exchanges'])
             rule = AutomationRule.objects.create(**data)
@@ -125,7 +153,8 @@ class AutomationRuleView(LoginRequiredMixin, View):
 
     def delete(self, request, rule_id):
         try:
-            rule = AutomationRule.objects.get(id=rule_id)
+            user_account_ids = self.get_user_accounts(request.user.username)
+            rule = AutomationRule.objects.get(id=rule_id, account__in=user_account_ids)
             rule.delete()
             return JsonResponse({'success': True})
         except AutomationRule.DoesNotExist:
@@ -135,8 +164,16 @@ class AutomationRuleView(LoginRequiredMixin, View):
 
     def patch(self, request, rule_id):
         try:
-            rule = AutomationRule.objects.get(id=rule_id)
+            user_account_ids = self.get_user_accounts(request.user.username)
+            rule = AutomationRule.objects.get(id=rule_id, account__in=user_account_ids)
             data = json.loads(request.body)
+            
+            # If account is being updated, verify it belongs to the user
+            if 'account' in data and str(data['account']) not in user_account_ids:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid account ID'
+                }, status=403)
             
             # Update fields if they exist in the request
             for field in ['account', 'exchanges', 'market_type', 'amount_usdt', 'status']:
