@@ -4,6 +4,7 @@ from .models import AutomationRule
 from the_combiner_view.api_utils import TradeExternalApis
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+import time
 
 logger = logging.getLogger(__name__)
 trade_api = TradeExternalApis()
@@ -132,9 +133,10 @@ class AutomationHandler:
             print("\n    Processing Matching Tokens")
             print(f"    Total matching tokens: {len(matching_tokens)}")
             
+            # If more than 2 tokens, take only the first 2
             if len(matching_tokens) > 2:
-                print(f"    Skipping: Too many tokens ({len(matching_tokens)}). Maximum allowed: 2")
-                return
+                print(f"    Limiting to first 2 tokens (from {len(matching_tokens)} total)")
+                matching_tokens = matching_tokens[:2]
 
             # Get account information
             try:
@@ -151,20 +153,49 @@ class AutomationHandler:
                 usdt_per_token = rule.amount_usdt / len(matching_tokens)
                 print(f"    USDT per token ({rule.amount_usdt} / {len(matching_tokens)}): {usdt_per_token}")
                 
-                # Process each token sequentially
-                for index, token in enumerate(matching_tokens, 1):
-                    print(f"\n    Processing Trade {index}/{len(matching_tokens)}:")
+                # Prepare all trades first
+                trades = []
+                for token in matching_tokens:
+                    symbol = f"{token.get('token')}USDT"
+                    order_data = {
+                        "symbol": symbol,
+                        "side": "BUY",
+                        "type": "MARKET",
+                        "quote_order_qty": usdt_per_token
+                    }
+                    trades.append((token, order_data))
+
+                # Execute trades with minimal delay
+                responses = []
+                for index, (token, order_data) in enumerate(trades, 1):
+                    print(f"\n    Sending Trade {index}/{len(trades)}:")
                     print(f"    - Token: {token.get('token')}")
-                    print(f"    - Listing Exchange: {token.get('exchange')}")
-                    print(f"    - Trading Account: {account_info['name']} ({account_info['exchange']})")
                     print(f"    - Amount: {usdt_per_token} USDT")
 
-                    # Execute the trade
-                    AutomationHandler._execute_trade(
-                        account_id=account_id,
-                        token=token.get('token'),
-                        amount=usdt_per_token,
-                        account_info=account_info
+                    if account_info['exchange'].lower() == 'mexc':
+                        # Send trade asynchronously
+                        response = trade_api.create_mexc_order(account_id, order_data)
+                        responses.append((token, response))
+                        if index < len(trades):
+                            time.sleep(0.002)  # 2ms delay between trades
+                    else:
+                        print(f"    Unsupported exchange: {account_info['exchange']}")
+
+                # Process responses and send notifications
+                for token, response in responses:
+                    print(f"\n    Processing response for {token.get('token')}:")
+                    print(f"    Response: {response}")
+                    
+                    channel_layer = get_channel_layer()
+                    async_to_sync(channel_layer.group_send)(
+                        "trading",
+                        {
+                            "type": "trade_notification",
+                            "message": {
+                                "type": "mexc_trade",
+                                "data": response
+                            }
+                        }
                     )
 
             except ValueError as e:

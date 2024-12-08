@@ -1035,11 +1035,26 @@
         let statusClass, message;
         
         if (isSuccess) {
-            statusClass = 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/90';  // Changed /50 to /75
+            statusClass = 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/90';
             message = `Successfully placed order for ${symbol}: ${amount} USDT`;
         } else {
-            statusClass = 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/90';  // Changed /50 to /75
-            const errorMsg = response.detail?.msg || 'Unknown error';
+            statusClass = 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/90';
+            
+            // Extract error message based on response structure
+            let errorMsg = 'Unknown error';
+            if (response.detail) {
+                if (Array.isArray(response.detail)) {
+                    // Handle validation errors array
+                    errorMsg = response.detail[0]?.msg || 'Validation error';
+                } else if (typeof response.detail === 'object') {
+                    // Handle structured error object
+                    errorMsg = response.detail.msg || 'API error';
+                } else {
+                    // Handle string error
+                    errorMsg = response.detail;
+                }
+            }
+            
             const attempt = response._metadata?.attempt || 1;
             message = `Failed to place order for ${symbol} (Attempt ${attempt}): ${errorMsg}`;
         }
